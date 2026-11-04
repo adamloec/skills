@@ -1,0 +1,4 @@
+# Native builds pnpm may run on install: image optimization and the ESLint resolver.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true

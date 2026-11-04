@@ -4,7 +4,7 @@
 
 | Thing | Pattern | Example |
 |---|---|---|
-| Package | `<app>_<role>` | `ledger_api`, `ledger_core` |
+| Package | `<app>_<role>` | `acme_api`, `acme_core` |
 | Route module | plural noun | `routes/invoices.py`, `routes/spend_limits.py` |
 | Model module | singular noun | `models/invoice.py` |
 | Service module | `<domain>_service.py` | `invoice_service.py` |
@@ -26,7 +26,7 @@
 | Service | `<Domain>Service` | `InvoiceService` |
 | Repository | `<Entity>Repository` | `InvoiceRepository` |
 | Settings | `CoreSettings` (shared infra), `<Role>Settings` (one service) | `ApiSettings`, `WorkerSettings`, `AuthSettings` |
-| Exception root | `<App>Exception` | `LedgerException` |
+| Exception root | `<App>Exception` | `AcmeException` |
 | Exception | `<Meaning>Error` | `NotFoundError`, `ConflictError`, `UpstreamError` |
 | Middleware | `<Thing>Middleware` | `EdgeCallerMiddleware` |
 | Plugin ABC | `Base<Kind>` | `BaseProvider` |

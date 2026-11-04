@@ -19,14 +19,14 @@ Templates under `templates/` use these tokens. Pick the values once, from the ap
 
 | Token | Meaning | Example |
 |---|---|---|
-| `{{app}}` | short app slug, lowercase | `ledger` |
-| `{{App}}` | display name, PascalCase | `Ledger` |
-| `{{APP}}` | env var prefix, no trailing underscore | `LEDGER` |
-| `{{dist}}` | repo / distribution name, kebab | `ledger-api` |
-| `{{pkg}}` | import package, `{{dist}}` with underscores | `ledger_api` |
+| `{{app}}` | short app slug, lowercase | `acme` |
+| `{{App}}` | display name, PascalCase | `Acme` |
+| `{{APP}}` | env var prefix, no trailing underscore | `ACME` |
+| `{{dist}}` | repo / distribution name, kebab | `acme-api` |
+| `{{pkg}}` | import package, `{{dist}}` with underscores | `acme_api` |
 
-Repos are named `<app>-<role>`: `ledger-api`, `ledger-worker`, `ledger-core` (shared library),
-`ledger-web`. Every service of one app shares the one `{{APP}}_` env prefix.
+Repos are named `<app>-<role>`: `acme-api`, `acme-worker`, `acme-core` (shared library),
+`acme-web`. Every service of one app shares the one `{{APP}}_` env prefix.
 
 ## Workflow
 
@@ -35,9 +35,9 @@ Repos are named `<app>-<role>`: `ledger-api`, `ledger-worker`, `ledger-core` (sh
 1. Copy `templates/service/` to the new repo root, including dotfiles.
 2. Rename the `src/{{pkg}}` directory, then substitute every token in every file:
    ```bash
-   mv 'src/{{pkg}}' src/ledger_api
-   grep -rl '{{' . | xargs sed -i -e 's/{{pkg}}/ledger_api/g' -e 's/{{dist}}/ledger-api/g' \
-     -e 's/{{APP}}/LEDGER/g' -e 's/{{App}}/Ledger/g' -e 's/{{app}}/ledger/g'
+   mv 'src/{{pkg}}' src/acme_api
+   grep -rl '{{' . | xargs sed -i -e 's/{{pkg}}/acme_api/g' -e 's/{{dist}}/acme-api/g' \
+     -e 's/{{APP}}/ACME/g' -e 's/{{App}}/Acme/g' -e 's/{{app}}/acme/g'
    ```
 3. The template ships one example resource, `notes`, wired through every layer (model →
    repository → service → route → migration → tests). Rename it to the app's first real

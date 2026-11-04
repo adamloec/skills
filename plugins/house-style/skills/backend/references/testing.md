@@ -39,7 +39,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
-from ledger_api.models.note import Note  # noqa: F401
+from acme_api.models.note import Note  # noqa: F401
 
 TEST_ORG_ID = "org_test_fixture"
 
@@ -99,7 +99,7 @@ because its lifespan opens real infrastructure:
 @pytest.fixture
 async def client(session):
     app = FastAPI()
-    app.add_exception_handler(LedgerException, app_exception_handler)
+    app.add_exception_handler(AcmeException, app_exception_handler)
     app.include_router(router)
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[require_user] = lambda: USER

@@ -1,0 +1,52 @@
+/* The palette. Replace these values with the app's brand; keep the names. */
+
+:root {
+  color-scheme: dark;
+  --radius: 0.5rem;
+  --background: #0a0a0c;
+  --foreground: #fafafa;
+  --card: #111114;
+  --card-foreground: #fafafa;
+  --popover: #151518;
+  --popover-foreground: #fafafa;
+  --primary: #4f6bed;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2a32;
+  --secondary-foreground: #fafafa;
+  --muted: #0f0f12;
+  --muted-foreground: #8c8c96;
+  --accent: #1a1a20;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #e5a30f;
+  --border: #33333d;
+  --input: #48485a;
+  --ring: #4f6bed;
+}
+
+.light {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0c;
+  --card: #fafafa;
+  --card-foreground: #0a0a0c;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0c;
+  --primary: #3b55d9;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f1f4;
+  --secondary-foreground: #0a0a0c;
+  --muted: #f4f4f5;
+  --muted-foreground: #63636e;
+  --accent: #ededf0;
+  --accent-foreground: #0a0a0c;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #b7820b;
+  --border: #e4e4e7;
+  --input: #d4d4d8;
+  --ring: #3b55d9;
+}

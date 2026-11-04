@@ -3,9 +3,9 @@
 ## `main.py`
 
 ```python
-"""Ledger API — FastAPI entrypoint.
+"""Acme API — FastAPI entrypoint.
 
-Owns the ledger's tables and serves them under ``/v1``.
+Owns the acme's tables and serves them under ``/v1``.
 """
 
 from contextlib import asynccontextmanager
@@ -13,14 +13,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 
-from ledger_api.api.middleware.exception_handler import (
+from acme_api.api.middleware.exception_handler import (
     app_exception_handler,
     unhandled_exception_handler,
 )
-from ledger_api.api.routes import router
-from ledger_api.config import db
-from ledger_api.lib.exceptions import LedgerException
-from ledger_api.lib.utils.logger import get_logger
+from acme_api.api.routes import router
+from acme_api.config import db
+from acme_api.lib.exceptions import AcmeException
+from acme_api.lib.utils.logger import get_logger
 
 logger = get_logger("api")
 
@@ -31,20 +31,20 @@ async def lifespan(app: FastAPI):
 
     No schema is created here. Alembic owns it, and the image entrypoint has already applied it.
     """
-    logger.info("Starting Ledger API")
+    logger.info("Starting Acme API")
     await db.init()
-    logger.info("Ledger API started")
+    logger.info("Acme API started")
     try:
         yield
     finally:
-        logger.info("Shutting down Ledger API")
+        logger.info("Shutting down Acme API")
         await db.close()
-        logger.info("Ledger API stopped")
+        logger.info("Acme API stopped")
 
 
-app = FastAPI(title="Ledger API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Acme API", version="0.1.0", lifespan=lifespan)
 
-app.add_exception_handler(LedgerException, app_exception_handler)
+app.add_exception_handler(AcmeException, app_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 app.include_router(router)
@@ -90,8 +90,8 @@ Coarse access is drawn here, at mount time, rather than route by route.
 
 from fastapi import APIRouter, Depends
 
-from ledger_api.api.deps.identity import require_user
-from ledger_api.api.routes import invoices, me, notes
+from acme_api.api.deps.identity import require_user
+from acme_api.api.routes import invoices, me, notes
 
 router = APIRouter(prefix="/v1")
 
@@ -239,7 +239,7 @@ Use keyset pagination on any table that grows:
 Every typed error serializes to one envelope:
 
 ```json
-{"type": "ledger_error", "code": "not_found", "message": "Note not found",
+{"type": "acme_error", "code": "not_found", "message": "Note not found",
  "context": {}, "hint": null, "is_retryable": false}
 ```
 

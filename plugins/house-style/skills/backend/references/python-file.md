@@ -25,9 +25,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Query
 
-from ledger_api.api.deps.session import SessionDep
-from ledger_api.models.note import Note, NotePage
-from ledger_api.services.note_service import NoteService
+from acme_api.api.deps.session import SessionDep
+from acme_api.models.note import Note, NotePage
+from acme_api.services.note_service import NoteService
 
 PAGE_SIZE_MAX = 200
 """The largest page a list route returns."""

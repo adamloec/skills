@@ -6,7 +6,7 @@
   self-documenting list of what the process reads from its environment.
 - **`config.py` is the composition root.** It is the only module that instantiates settings,
   configures logging and constructs infrastructure singletons. Every other module imports what
-  it needs from there: `from ledger_api.config import db, settings`.
+  it needs from there: `from acme_api.config import db, settings`.
 - **Construction does no I/O.** `config.py` builds `Database`, `HttpPool`, `RedisClient` and
   similar objects cheaply at import. `main.py`'s lifespan (and `worker.py`'s `main()`) start
   them and stop them in reverse order.
@@ -27,14 +27,14 @@ shared library is extracted, `lib/config.py` moves with `lib/` unchanged.
 
 ```python
 class ServiceSettings(BaseSettings):
-    """Service settings, read from ``LEDGER_``-prefixed environment variables.
+    """Service settings, read from ``ACME_``-prefixed environment variables.
 
     ``internal_secret`` proves a call came from a sibling service; empty disables the gate on
     the receiving side, which then refuses every caller.
     ``invite_ttl_days`` bounds how long an invitation stays claimable; zero disables expiry.
     """
 
-    model_config = SettingsConfigDict(env_prefix="LEDGER_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="ACME_", extra="ignore")
 
     internal_secret: str = ""
 
@@ -42,7 +42,7 @@ class ServiceSettings(BaseSettings):
     invite_ttl_days: int = 14
 
     s3_endpoint: str = ""
-    s3_bucket: str = "ledger-files"
+    s3_bucket: str = "acme-files"
     s3_access_key: str = ""
     s3_secret_key: str = ""
 
@@ -68,7 +68,7 @@ class ServiceSettings(BaseSettings):
   per field in the class docstring when the explanation is long. An obvious field
   (`redis_url`) needs nothing.
 - **Closed modes are `Literal`:** `auth_mode: Literal["oidc", "trusted-header"] = "oidc"`.
-- **Lists are plural fields.** The env value is JSON: `LEDGER_ALLOWED_ORIGINS='["https://a"]'`.
+- **Lists are plural fields.** The env value is JSON: `ACME_ALLOWED_ORIGINS='["https://a"]'`.
   An empty list must have a defined meaning, which is usually "fail closed".
 - **Derived defaults** use `@model_validator(mode="after")`, e.g. seeding an allowlist from
   the primary value. A suspicious value logs a warning in a `@field_validator` rather than
@@ -78,7 +78,7 @@ class ServiceSettings(BaseSettings):
 ## Field naming
 
 The env var is the prefix plus the field name, upper-cased: `invite_ttl_days` →
-`LEDGER_INVITE_TTL_DAYS`. So the field name *is* the env var name. Name it for an operator.
+`ACME_INVITE_TTL_DAYS`. So the field name *is* the env var name. Name it for an operator.
 
 | Kind | Pattern | Example |
 |---|---|---|
@@ -105,9 +105,9 @@ owning only its own fields. ``db`` is constructed here; its lifecycle belongs to
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ledger_api.lib.config import CoreSettings
-from ledger_api.lib.db import Database
-from ledger_api.lib.utils.logger import setup_logging
+from acme_api.lib.config import CoreSettings
+from acme_api.lib.db import Database
+from acme_api.lib.utils.logger import setup_logging
 
 
 class ServiceSettings(BaseSettings):
@@ -158,8 +158,8 @@ Every service README has a configuration table, kept in sync with the settings c
 ```markdown
 | Variable | Default | Purpose |
 |---|---|---|
-| `LEDGER_DATABASE_URL` | local Postgres | The service's own database. |
-| `LEDGER_INTERNAL_SECRET` | empty (gate refuses all) | Shared with sibling services. |
+| `ACME_DATABASE_URL` | local Postgres | The service's own database. |
+| `ACME_INTERNAL_SECRET` | empty (gate refuses all) | Shared with sibling services. |
 ```
 
 There is no `.env` file in the repo. Local values come from the defaults and the compose rig.

@@ -13,7 +13,7 @@ lib/exceptions/
 ```
 
 ```python
-class LedgerException(Exception):
+class AcmeException(Exception):
     """Base for every app-defined exception.
 
     Attributes:
@@ -25,13 +25,13 @@ class LedgerException(Exception):
         is_retryable: Whether retrying the same input could help.
     """
 
-    code: ClassVar[str] = "ledger_error"
+    code: ClassVar[str] = "acme_error"
     status_code: ClassVar[int] = 500
     default_message: ClassVar[str] = "Something went wrong."
 ```
 
 ```python
-class ConflictError(LedgerException):
+class ConflictError(AcmeException):
     code: ClassVar[str] = "conflict"
     status_code: ClassVar[int] = 409
     default_message: ClassVar[str] = "Resource conflict."
@@ -56,7 +56,7 @@ class ConflictError(LedgerException):
 ## Mapping to HTTP (`api/middleware/exception_handler.py`)
 
 ```python
-async def app_exception_handler(request: Request, exc: LedgerException) -> JSONResponse:
+async def app_exception_handler(request: Request, exc: AcmeException) -> JSONResponse:
     """Serialize any app exception into the uniform wire envelope."""
     logger.error(
         exc.message, code=exc.code, status_code=exc.status_code,

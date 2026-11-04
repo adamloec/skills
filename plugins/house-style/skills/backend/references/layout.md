@@ -23,7 +23,7 @@ migrations/{env.py, script.py.mako, versions/}
 scripts/entrypoint.sh     migrate, then exec the process (see the infra skill)
 ```
 
-The package name is the distribution name with underscores: `ledger-api` → `ledger_api`.
+The package name is the distribution name with underscores: `acme-api` → `acme_api`.
 
 ## Two package shapes
 
