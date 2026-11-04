@@ -122,5 +122,6 @@
 
 - Median about 80 lines. When a file passes about 300 lines, split it by sub-surface into a
   subfolder (`components/fields/`, `components/panel/`).
-- Keep one component per concern. Private subcomponents stay in the file until a second file
-  needs them.
+- Keep one component per concern. **There are no unexported subcomponents.** A piece worth
+  naming gets its own exported file (`note-row.tsx`). A piece that isn't worth naming stays
+  inline in the parent's JSX.

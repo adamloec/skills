@@ -64,18 +64,18 @@ async def session(engine):
 def make_note(session):
     """Seed a note row directly, bypassing the service."""
 
-    async def _make(display_name: str = "Inbox", org_id: str = TEST_ORG_ID) -> Note:
+    async def make(display_name: str = "Inbox", org_id: str = TEST_ORG_ID) -> Note:
         note = Note(org_id=org_id, display_name=display_name)
         session.add(note)
         await session.commit()
         return note
 
-    return _make
+    return make
 ```
 
 - `engine` and `session` are fixtures on in-memory `sqlite+aiosqlite://`. Recreate any
   Postgres-only partial indexes natively in `engine`.
-- **Factories are fixtures returning an inner `async def _make(...)`.** Don't use factory_boy.
+- **Factories are fixtures returning an inner `async def make(...)`.** Don't use factory_boy.
 - **Almost no mocks.** Use the real repositories and services on SQLite. Use `monkeypatch` only
   for a true external boundary (vendor SDK, clock, network).
 - Plain value fixtures are nouns: `org_id`, `user`.
@@ -123,5 +123,6 @@ Override only the session and the identity or scope dependency.
 - Use `pytest.raises(XError, match="…")`. Put `response.text` in the status assert so a failure
   shows the body.
 - Parametrize with `pytest.param(..., id="readable-case")`.
-- Write one behaviour per test. A shared setup sequence goes in a fixture or a small `_helper`.
+- Write one behaviour per test. A shared setup sequence goes in a fixture, never in a `_helper`
+  function.
 - A test file gets a docstring only when its setup is non-obvious.

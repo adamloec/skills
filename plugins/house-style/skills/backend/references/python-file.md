@@ -8,11 +8,30 @@
 4. Module constants, each followed by an attribute docstring
 5. `logger = get_logger("...")`
 6. Type aliases (`Name = Annotated[...]` plus an attribute docstring)
-7. Public classes and functions
-8. Private `_helpers`, placed just below their first caller
+7. Classes and functions, every one public and documented
 
-A router module is: docstring → imports → `router = APIRouter(...)` → private helpers →
-handlers.
+A router module is: docstring → imports → `router = APIRouter(...)` → handlers. Nothing else
+lives in a router module.
+
+## No private or one-off functions
+
+- **Every function is public and documented.** There are no `_helper` functions, at module
+  level or anywhere else.
+- **A function lives with the concept it serves:**
+  - a service `@staticmethod` (`NoteService.validated_fields`)
+  - a model method or classmethod (`Note.validate_patch`, `Execution.of`)
+  - a repository query (`NoteRepository.list_page`)
+  - an enum `@property`
+  - the public contract of a `lib/` module (`utcnow`, `to_envelope`)
+- **Logic with one caller stays inline.** Name the intermediate values with well-named locals
+  instead of hoisting three lines into a function nobody else calls.
+- **Extract only when it earns a name on its owner.** That means a second caller, or a
+  meaningful operation of the domain that tests or other layers should reach. When you
+  extract, put it on the owning class, never as a free-floating module function.
+- **A leading underscore is used only for instance state** (`self._client`, `self._memberships`).
+  Never use one on a function, a module or a constant.
+- **Closures are fine only when they are the return value:** a dependency factory's `gate`, a
+  fixture factory's `make`, a decorator's wrapper.
 
 ```python
 """Note routes — CRUD over the caller's notes.
@@ -89,8 +108,8 @@ def resolve_reference(ref: str, sources: dict[str, Any], *, strict: bool = False
 - restatements
 - a `TODO` with no issue link
 
-If a line needs explaining, extract a well-named local or function. Design rationale belongs in
-an ADR or a doc, not in the code.
+If a line needs explaining, name it with a well-named local, or put the operation on the class
+that owns it. Design rationale belongs in an ADR or a doc, not in the code.
 
 **Keep:**
 - tool pragmas (`# noqa: F401`, `# type: ignore[arg-type]`, `# pragma: no cover`)

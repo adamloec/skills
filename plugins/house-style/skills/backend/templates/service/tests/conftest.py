@@ -47,13 +47,13 @@ def user() -> Principal:
 def make_note(session):
     """Seed a note row directly, bypassing the service."""
 
-    async def _make(display_name: str = "Inbox", org_id: str = TEST_ORG_ID) -> Note:
+    async def make(display_name: str = "Inbox", org_id: str = TEST_ORG_ID) -> Note:
         note = Note(org_id=org_id, display_name=display_name)
         session.add(note)
         await session.commit()
         return note
 
-    return _make
+    return make
 
 
 @pytest.fixture

@@ -53,7 +53,7 @@ class NoteService:
             BadRequestError: A field is not patchable, or the name is missing or blank.
             ConflictError: The organization already has a note with this name.
         """
-        fields = _validated_fields(body, require_name=True)
+        fields = NoteService.validated_fields(body, require_name=True)
         note = Note(org_id=org_id, **fields)
         try:
             note = await NoteRepository(session).create(note)
@@ -74,7 +74,7 @@ class NoteService:
             ConflictError: The new name is already taken in this organization.
             NotFoundError: No such note in this organization.
         """
-        fields = _validated_fields(body, require_name=False)
+        fields = NoteService.validated_fields(body, require_name=False)
         note = await NoteService.get(session, org_id=org_id, note_id=note_id)
         for name, value in fields.items():
             setattr(note, name, value)
@@ -97,17 +97,24 @@ class NoteService:
         await session.commit()
         logger.info("Note deleted", note_id=str(note_id), org_id=org_id)
 
+    @staticmethod
+    def validated_fields(body: Mapping[str, Any], *, require_name: bool) -> dict[str, Any]:
+        """Validate a create or patch body, trimming the name and refusing a blank one.
 
-def _validated_fields(body: Mapping[str, Any], *, require_name: bool) -> dict[str, Any]:
-    """Validate a create or patch body, trimming the name and refusing a blank one.
+        Args:
+            body: The request body, keyed by field name.
+            require_name: Refuse a body without ``display_name``, as a create must.
 
-    Raises:
-        BadRequestError: A field is not patchable, or the name is blank, or missing when
-            ``require_name`` is set.
-    """
-    fields = Note.validate_patch(body)
-    if "display_name" in fields:
-        fields["display_name"] = fields["display_name"].strip()
-    if (require_name or "display_name" in fields) and not fields.get("display_name"):
-        raise BadRequestError("Note name is required")
-    return fields
+        Returns:
+            The body's values, validated, with ``display_name`` trimmed.
+
+        Raises:
+            BadRequestError: A field is not patchable, or the name is blank, or missing when
+                ``require_name`` is set.
+        """
+        fields = Note.validate_patch(body)
+        if "display_name" in fields:
+            fields["display_name"] = fields["display_name"].strip()
+        if (require_name or "display_name" in fields) and not fields.get("display_name"):
+            raise BadRequestError("Note name is required")
+        return fields

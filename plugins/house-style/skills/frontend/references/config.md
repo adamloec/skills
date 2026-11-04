@@ -2,9 +2,9 @@
 
 ## Environment variables
 
-- **Server-only and read at request time.** An env read is a **function**, never a module-scope
-  constant. A module-scope `process.env` read runs during `next build`, where runtime values are
-  absent:
+- **Server-only and read at request time.** An env read is an exported **function** in
+  `lib/env.ts`, never a module-scope constant. A module-scope `process.env` read runs during
+  `next build`, where runtime values are absent:
   ```ts
   /** Longest a session record may live. */
   export function sessionTtlSeconds(): number {

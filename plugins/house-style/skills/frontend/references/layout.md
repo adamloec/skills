@@ -57,7 +57,9 @@ src/
 │       ├── stores/            rare: a store only this feature uses
 │       └── types.ts           rare: feature-local view/form types
 ├── lib/                       SERVER/APP INFRASTRUCTURE ONLY
-│   ├── api/client.ts          the fetch wrapper (token + scope headers, throws ApiError)
+│   ├── env.ts                 every env var the server reads, one exported function each
+│   ├── action-result.ts       ActionResult + withToken, the one wrapper every action uses
+│   ├── api/client.ts          the `api` object: request + verbs (token + scope headers)
 │   ├── api/<domain>.ts        one typed client object per backend domain
 │   └── <topic>.ts             nav-config.ts, origin.ts, sse-relay.ts, …
 ├── stores/                    cross-surface Zustand mirrors: <noun>.ts
@@ -115,8 +117,9 @@ For a feature `invoices`:
    snake_case fields mirroring the API.
 2. `lib/api/invoices.ts`: `export const invoicesApi = { list, get, create, update, delete }`.
    Every method takes `token` first.
-3. `features/invoices/actions.ts`: `"use server"`, `ActionResult`, `withToken`, then
-   `createInvoice`, `updateInvoice`, `deleteInvoice`. Each calls `revalidatePath`.
+3. `features/invoices/actions.ts`: `"use server"`, importing `ActionResult` and `withToken` from
+   `@/lib/action-result`, then `createInvoice`, `updateInvoice`, `deleteInvoice`. Each calls
+   `revalidatePath`.
 4. `features/invoices/components/invoice-list.tsx` (client), plus any `invoice-*.tsx`
    pieces.
 5. `app/(app)/invoices/page.tsx`: `dynamic = "force-dynamic"`, `metadata`, fetch, render

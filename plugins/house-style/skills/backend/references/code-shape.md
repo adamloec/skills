@@ -42,8 +42,12 @@
 - **Default arguments are immutable.** Use `None` and build the value inside the function, or
   use `Field(default_factory=...)`.
 - **Return concrete types:** `list[Model]`, not a generator, from repositories.
-- **Keep functions small.** A median function is about 10 lines. When one grows a second job,
-  extract it and give it a name and a docstring.
+- **Keep functions small,** but not by scattering helpers. A median function is about 10
+  lines. When one grows a second job, move that job onto the class that owns it (a service
+  static method, a model method, a repository query) and document it there.
+- **No private or one-off functions.** A free-floating `_helper` with one caller is inlined. A
+  helper with several callers belongs on a class or in a `lib/` module as a public, documented
+  function. See `python-file.md`.
 
 ## Which kind of class
 

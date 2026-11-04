@@ -10,7 +10,6 @@
 | Service module | `<domain>_service.py` | `invoice_service.py` |
 | Repository module | `<entity>_repository.py` | `invoice_repository.py` |
 | Middleware module | `<thing>_middleware.py`, or `exception_handler.py` | `edge_caller_middleware.py` |
-| Private module | `_name.py` | `client/_http.py` |
 | Migration | `NNNN_snake_slug.py` | `0007_invoice_due_date.py` |
 | Test file | `test_<behaviour or resource>.py` | `test_invoices.py`, `test_patch_is_strict.py` |
 
@@ -85,14 +84,15 @@
 - Serializers are `to_<format>()`: `to_envelope`, `to_headers`.
 - Cursor helpers are `encode_cursor` / `decode_cursor`.
 
-**Private:** use `_name` for module helpers, module constants that are private, and instance
-state (`self._client`).
+**Leading underscore:** only for instance state (`self._client`). There are no private
+functions, private modules or private constants. Everything a module defines is public and
+documented.
 
 ## Variables, constants and fields
 
 - **Constants:** `UPPER_SNAKE`. **Units go in the name:** `TTL_SECONDS`, `READ_CHARS`,
-  `POLL_MS`, `TIMEOUT_MINUTES`. Use numeric separators: `20_000`. A private constant is
-  `_UPPER_SNAKE`.
+  `POLL_MS`, `TIMEOUT_MINUTES`. Use numeric separators: `20_000`. Constants are public and carry
+  an attribute docstring.
 - **Booleans:**
   - Stored flags: `is_<state>` (`is_default`, `is_active`).
   - Toggles: `<feature>_enabled` in settings, `include_<thing>` for query switches.

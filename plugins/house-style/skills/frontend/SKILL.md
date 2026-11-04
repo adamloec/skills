@@ -77,29 +77,38 @@ them: see `references/packages.md`.
    the app.
 5. **Named exports only.** Use default exports only where Next requires them (`page`,
    `layout`, `error`, `loading`, `not-found`, `proxy`).
-6. **`function` declarations for components and module helpers.** Never write
-   `const Foo = () =>`. Don't use `forwardRef`.
-7. **Server actions return results and never throw:**
-   `{ success: true; data } | { success: false; error }`. Every call site checks
+6. **`function` declarations for components.** Never write `const Foo = () =>`. Don't use
+   `forwardRef`.
+7. **No unexported or one-off functions.**
+   - Every module-level function and component is exported, documented, and named for what it
+     is.
+   - Logic with one caller stays inline.
+   - A subcomponent gets its own file.
+   - A helper shared within a feature lives in that feature's `lib/`. One shared across
+     features lives in `lib/` or `kit/`.
+   - There is one definition, never a copy per file.
+   - Handlers declared inside a component are part of that component, and are fine.
+8. **Server actions return results and never throw.** Every one returns
+   `ActionResult<T>` via `withToken` from `@/lib/action-result`, and every call site checks
    `result.success`.
-8. **Never trust caller-supplied scope.** Actions read the token and the active scope from
+9. **Never trust caller-supplied scope.** Actions read the token and the active scope from
    httpOnly cookies on the server.
-9. **Stores are mirrors, not sources.** Zustand holds client views of server truth. They are
+10. **Stores are mirrors, not sources.** Zustand holds client views of server truth. They are
    seeded by renderless `*Hydrator` components from RSC props and refreshed by
    `router.refresh()`. Never use `persist`.
-10. **Semantic tokens only:** `bg-card`, `text-muted-foreground`, `border-border`. No hex, no
+11. **Semantic tokens only:** `bg-card`, `text-muted-foreground`, `border-border`. No hex, no
     `dark:`, no fixed neutrals, no duration literals. `pnpm check:colors` enforces it.
-11. **No parallel component library.** Primitives live in `ui` (`src/ui/` until it becomes a
+12. **No parallel component library.** Primitives live in `ui` (`src/ui/` until it becomes a
     package). Feature code composes them.
-12. **JSDoc on declarations, no comments in bodies.** Every module and exported symbol gets a
+13. **JSDoc on declarations, no comments in bodies.** Every module and exported symbol gets a
     `/** … */` describing the contract. TSDoc goes on every interface member.
-13. **Env reads are functions evaluated at request time,** never module-scope constants. A
+14. **Env reads are functions in `lib/env.ts`, evaluated at request time,** never module-scope constants. A
     module-scope read runs during `next build`, where runtime values are absent. There are no
     `NEXT_PUBLIC_*` variables: the browser gets configuration through RSC props.
-14. **Unions, not enums.** Use string-literal unions, or a const object plus a same-named type.
+15. **Unions, not enums.** Use string-literal unions, or a const object plus a same-named type.
     Use `Record<Union, X>` lookup maps so a new member is a type error until it is handled.
-15. **Units in names:** `POLL_MS = 60_000`, `MAX_AGE_SECONDS`.
-16. **Required data fails the page; auxiliary data degrades.** Use `notFound()` for the subject
+16. **Units in names:** `POLL_MS = 60_000`, `MAX_AGE_SECONDS`.
+17. **Required data fails the page; auxiliary data degrades.** Use `notFound()` for the subject
     resource, and `Promise.allSettled` / `.catch(() => [])` for the rest.
 
 ## App shape at a glance
@@ -114,7 +123,7 @@ them: see `references/packages.md`.
     ├── app/               routing only: (auth)/, (app)/, api/ route handlers
     ├── components/        app shell glue: providers, hydrators, layout/
     ├── features/<feature>/  actions.ts, components/, hooks/, lib/
-    ├── lib/               server infrastructure: api/client.ts, api/<domain>.ts, …
+    ├── lib/               server infrastructure: env.ts, action-result.ts, api/client.ts, api/<domain>.ts
     ├── stores/            cross-surface Zustand mirrors
     ├── types/             app-only types and *.d.ts shims
     ├── kit/               pure TS: wire types, formatters, error envelope (no DOM, no React)
@@ -124,6 +133,7 @@ them: see `references/packages.md`.
 ## Before you finish
 
 - [ ] Files are kebab-case, exports are named, and each component file matches its main export.
+- [ ] No unexported module-level functions or subcomponents, and no helper copied between files.
 - [ ] Each new module and each exported symbol has JSDoc. Interface members have TSDoc. No body
       comments.
 - [ ] No client file imports `lib/api` at runtime. Every write is a server action returning

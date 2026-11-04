@@ -108,6 +108,11 @@ Read the reference for the piece you are touching before writing it:
     `next_cursor`.
 16. **Tests run offline** against in-memory SQLite through the real repositories and services.
     Anything that needs live infrastructure is marked and skipped by default.
+17. **No private or one-off functions.** Every function is public, documented, and lives with the
+    concept it serves: a service static method, a model method or classmethod, a repository
+    query, or the public contract of a `lib/` module. Logic with one caller stays inline, with
+    well-named locals. A leading underscore is used only for instance state (`self._client`):
+    never for functions, modules or constants.
 
 ## Service shape at a glance
 
@@ -134,7 +139,9 @@ Read the reference for the piece you are touching before writing it:
 
 ## Before you finish
 
-- [ ] Every new module, public class and public function has a docstring. No body comments.
+- [ ] Every new module, class and function has a docstring. No body comments.
+- [ ] No `_private` functions, no `_private.py` modules, and no one-off helpers. Logic lives on
+      the class that owns it, or stays inline.
 - [ ] Imports are absolute, grouped stdlib / third-party / first-party, and sorted.
 - [ ] Names follow `references/naming.md`: service, repository and route verbs, `XDep`
       aliases, `is_` flags, unit-suffixed numbers.

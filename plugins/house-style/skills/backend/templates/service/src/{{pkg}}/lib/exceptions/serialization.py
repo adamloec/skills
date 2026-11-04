@@ -22,7 +22,7 @@ from {{pkg}}.lib.exceptions.http import (
 ENVELOPE_TYPE = "{{app}}_error"
 """The ``type`` every envelope carries, so a client can tell ours from a framework error."""
 
-_CODE_TO_CLASS: dict[str, type[{{App}}Exception]] = {
+EXCEPTION_BY_CODE: dict[str, type[{{App}}Exception]] = {
     cls.code: cls
     for cls in (
         AuthorizationError,
@@ -33,6 +33,7 @@ _CODE_TO_CLASS: dict[str, type[{{App}}Exception]] = {
         UpstreamError,
     )
 }
+"""Every wire ``code`` the client side can rebuild into its typed exception."""
 
 
 def to_envelope(exc: {{App}}Exception) -> dict[str, Any]:
@@ -49,7 +50,7 @@ def to_envelope(exc: {{App}}Exception) -> dict[str, Any]:
 
 def from_envelope(body: dict[str, Any]) -> {{App}}Exception:
     """Rebuild a typed exception from an envelope, falling back to the root for unknown codes."""
-    cls = _CODE_TO_CLASS.get(body.get("code", ""), {{App}}Exception)
+    cls = EXCEPTION_BY_CODE.get(body.get("code", ""), {{App}}Exception)
     return cls(
         body.get("message"),
         context=body.get("context"),

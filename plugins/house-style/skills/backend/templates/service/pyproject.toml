@@ -53,5 +53,4 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "src/*/repositories/*" = ["D101", "D102"]
-"migrations/env.py" = ["D103"]
 "tests/**" = ["D"]

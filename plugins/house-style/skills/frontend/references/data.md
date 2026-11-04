@@ -16,44 +16,37 @@ A `"use client"` file may `import type` from `lib/api`, never import it at runti
 ## The API client (`lib/api/client.ts`)
 
 ```ts
-/** The backend's base URL, read per request so a runtime value reaches a prebuilt image. */
-function apiUrl(): string {
-  return process.env.API_URL ?? "http://localhost:8000";
-}
-
 /**
- * Call the backend with the caller's token and the request's active scope.
+ * The API client. Every method takes the caller's access token.
  *
- * A 204 resolves to `undefined`; any other non-2xx throws `ApiError`.
+ * Server-only. The active scope is attached in `request` from its httpOnly cookie and nowhere
+ * else.
  */
-async function request<T>(path: string, token: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, headers = {} } = options;
-  const res = await fetch(`${apiUrl()}/v1${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...headers,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store",
-  });
-  if (!res.ok) throw apiError(res.status, await res.json().catch(() => null));
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
-}
-
-/** The backend client. Every method takes the caller's access token. */
 export const api = {
-  get: <T>(path: string, token: string) => request<T>(path, token),
+  /** Call the API. A 204 resolves to `undefined`; any other non-2xx throws `ApiError`. */
+  async request<T>(path: string, token: string, options: RequestOptions = {}): Promise<T> {
+    const { method = "GET", body, headers = {} } = options;
+    const res = await fetch(`${apiUrl()}/v1${path}`, {
+      method,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...headers },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      cache: "no-store",
+    });
+    if (!res.ok) throw apiError(res.status, await res.json().catch(() => null));
+    if (res.status === 204) return undefined as T;
+    return res.json() as Promise<T>;
+  },
+  get: <T>(path: string, token: string) => api.request<T>(path, token),
   post: <T>(path: string, token: string, body?: unknown) =>
-    request<T>(path, token, { method: "POST", body }),
+    api.request<T>(path, token, { method: "POST", body }),
   patch: <T>(path: string, token: string, body?: unknown) =>
-    request<T>(path, token, { method: "PATCH", body }),
-  delete: <T>(path: string, token: string) => request<T>(path, token, { method: "DELETE" }),
+    api.request<T>(path, token, { method: "PATCH", body }),
+  delete: <T>(path: string, token: string) => api.request<T>(path, token, { method: "DELETE" }),
 };
 ```
 
+- `request` is a member of the `api` object, not a private module function. `apiUrl()` comes
+  from `lib/env.ts`.
 - Attach the active scope here, once, from the httpOnly cookie (e.g. `X-<App>-Active-Org`,
   `X-<App>-Project-Id`). Those headers are **hints**: the backend verifies them against
   membership.
@@ -109,27 +102,17 @@ export default async function NotesPage() {
 
 ## Writes: server actions
 
+`lib/action-result.ts` is a plain server module, **not** `"use server"`. Exporting a helper from
+a `"use server"` file would publish it as a callable action. It holds the one definition of each:
+
 ```ts
-/**
- * Server actions for notes — create, rename and delete.
- *
- * Every action takes its scope from the session cookie, never from the caller, and returns an
- * `ActionResult` rather than throwing, so a failure renders inline instead of reaching the
- * route's error boundary.
- */
-"use server";
-
-import { revalidatePath } from "next/cache";
-import { getAccessToken } from "@/auth";
-import { notesApi } from "@/lib/api/notes";
-import type { Note } from "@/kit/types/notes";
-
-type ActionResult<T = unknown> =
+/** A server action's outcome: the data, or a message the UI can show. Actions never throw. */
+export type ActionResult<T = unknown> =
   | { success: true; data: T }
   | { success: false; error: string };
 
 /** Run `fn` with the caller's token, turning a missing token or a thrown error into a failure. */
-async function withToken<T>(
+export async function withToken<T>(
   fn: (token: string) => Promise<T>,
   fallback: string,
 ): Promise<ActionResult<T>> {
@@ -141,10 +124,31 @@ async function withToken<T>(
     return { success: false, error: e instanceof Error ? e.message : fallback };
   }
 }
+```
+
+A feature's actions file imports both:
+
+```ts
+/**
+ * Server actions for notes — create, rename and delete.
+ *
+ * Every action takes its scope from the session cookie, never from the caller, and returns an
+ * `ActionResult` rather than throwing, so a failure renders inline instead of reaching the
+ * route's error boundary.
+ */
+"use server";
+
+import { revalidatePath } from "next/cache";
+import type { Note } from "@/kit/types/notes";
+import { type ActionResult, withToken } from "@/lib/action-result";
+import { notesApi } from "@/lib/api/notes";
 
 /** Create a note in the active organization. */
 export async function createNote(displayName: string): Promise<ActionResult<Note>> {
-  const result = await withToken((t) => notesApi.create(t, { display_name: displayName }), "Failed to create note");
+  const result = await withToken(
+    (t) => notesApi.create(t, { display_name: displayName }),
+    "Failed to create note",
+  );
   if (result.success) revalidatePath("/notes");
   return result;
 }
@@ -152,8 +156,8 @@ export async function createNote(displayName: string): Promise<ActionResult<Note
 
 **Rules:**
 
-- `ActionResult` and `withToken` are defined **locally** in each `"use server"` file. A
-  `"use server"` file may export only async functions and types.
+- A `"use server"` file exports only its actions. `ActionResult` and `withToken` are imported
+  from `@/lib/action-result`, never redefined.
 - Return types are always explicit: `Promise<ActionResult<T>>`.
 - Each action has its own fallback message: "Failed to rename note".
 - **Never accept scope or identity as an argument.** Read them on the server.

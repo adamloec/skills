@@ -8,27 +8,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAccessToken } from "@/auth";
-import { notesApi } from "@/lib/api/notes";
 import type { Note } from "@/kit/types/notes";
-
-type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-/** Run `fn` with the caller's token, turning a missing token or a thrown error into a failure. */
-async function withToken<T>(
-  fn: (token: string) => Promise<T>,
-  fallback: string,
-): Promise<ActionResult<T>> {
-  const token = await getAccessToken();
-  if (!token) return { success: false, error: "Not authenticated" };
-  try {
-    return { success: true, data: await fn(token) };
-  } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : fallback };
-  }
-}
+import { type ActionResult, withToken } from "@/lib/action-result";
+import { notesApi } from "@/lib/api/notes";
 
 /** The first page of the organization's notes, newest first. */
 export async function listNotes(): Promise<ActionResult<Note[]>> {

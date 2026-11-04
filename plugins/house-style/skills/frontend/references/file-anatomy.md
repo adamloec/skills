@@ -6,24 +6,26 @@
 2. Imports.
 3. Exported types and interfaces.
 4. Module constants in SCREAMING_SNAKE: lookup maps, class strings, sizes.
-5. Small pure helpers, written as `function` declarations, each with a one-line JSDoc.
-6. The props `interface`, if it is named, placed right above the component.
-7. **The exported component.**
-8. Private subcomponents **below** it, unexported.
+5. The props `interface`, placed right above the component.
+6. **The exported component.** One per file, plus at most a small exported family of
+   siblings.
+
+**There are no unexported functions or subcomponents.**
+- A subcomponent gets its own kebab-case file and is exported (`note-row.tsx` → `NoteRow`).
+- A pure helper with several callers goes to the feature's `lib/<topic>.ts`, or to
+  `lib/`/`kit/` if it is shared across features. There it is exported and documented.
+- A helper with one caller is inlined.
+- A helper is never copied into a second file. Import the one definition.
+- Handlers and derived values declared **inside** a component body are part of the component,
+  and are fine.
 
 ```tsx
 "use client";
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import type { Note } from "@/kit/types/notes";
-import { relativeTime } from "@/kit/format";
-import { Button } from "@/ui/components/button";
 import { EmptyState } from "@/ui/components/empty-state";
-import { cn } from "@/ui/utils";
-import { deleteNote } from "../actions";
-
-const ROW = "grid grid-cols-[minmax(0,1fr)_120px_32px] items-center gap-3 px-4 py-2.5";
+import { NoteRow } from "./note-row";
 
 /** Props for {@link NoteList}. */
 export interface NoteListProps {
@@ -35,11 +37,6 @@ export interface NoteListProps {
  * The notes collection: one row per note, newest first, with inline delete.
  */
 export function NoteList({ initialNotes }: NoteListProps) {
-  ...
-}
-
-/** One note row. Busy state is local, so only the acted-on row shows it. */
-function NoteRow({ note, onDeleted }: { note: Note; onDeleted: (id: string) => void }) {
   ...
 }
 ```

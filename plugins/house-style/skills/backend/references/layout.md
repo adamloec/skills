@@ -76,7 +76,7 @@ src/<app>_core/
       registry.py        Registry instance + @register_<kind> decorator
       <impl>/{__init__.py, <role>.py}   e.g. stripe/provider.py: the file is named for its role
   lib/                   primitives: config.py, db/, exceptions/, http/, redis/, utils/
-  client/                async SDK client, private modules start with `_` (_http.py, _errors.py)
+  client/                async SDK client: http.py, errors.py, auth.py; the facade re-exports
   cli/                   CLI entrypoint, if any
 ```
 
@@ -124,8 +124,8 @@ The top-level `src/<pkg>/__init__.py` holds a one-line docstring and nothing els
   `routes/spend_limits.py`.
 - **Singular nouns** for model modules: `models/note.py`.
 - `<domain>_service.py`, `<entity>_repository.py`, `<thing>_middleware.py`.
-- A module that is private to its package starts with `_` (`client/_http.py`). Its public
-  names are re-exported by the package facade.
+- There are no private modules (`_http.py`). Name each module for its concern; the package
+  facade decides what the package exports.
 - Related small classes share a file. Two repositories of one domain, or a model with its
   `Page` and `Create` shapes, go together.
 
