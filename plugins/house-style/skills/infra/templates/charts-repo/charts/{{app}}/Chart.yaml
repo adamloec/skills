@@ -1,0 +1,18 @@
+apiVersion: v2
+name: {{app}}
+description: {{App}} application stack
+type: application
+# version is the release: one version = one tested, immutable bundle of templates + pinned image
+# tags. Bump it together with a CHANGELOG.md section; publishing refuses a version without one.
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/{{org}}/{{app}}-charts
+sources:
+  - https://github.com/{{org}}/{{app}}-charts
+# Exact pins, matching the committed charts/*.tgz and Chart.lock (make helm-deps). A release is a
+# pure function of the commit.
+dependencies:
+  - name: postgresql
+    version: "16.7.27"
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: postgresql.enabled

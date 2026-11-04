@@ -1,0 +1,61 @@
+name: Publish Chart
+
+# A chart is published when its Chart.yaml version is new. The CHANGELOG section for that
+# version is required and becomes the release notes; it is checked before anything is pushed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "charts/**"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Publish new versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          changelog_section() {
+            awk -v needle="## [$2]" '
+              index($0, needle) == 1 { capture = 1; next }
+              capture && /^## / { exit }
+              capture { print }
+            ' "$1" | sed -e '/./,$!d'
+          }
+
+          # Keep in step with CHARTS in the Makefile.
+          for chart in {{app}}; do
+            VERSION=$(yq '.version' "charts/$chart/Chart.yaml")
+            if helm show chart "oci://ghcr.io/${{ github.repository_owner }}/charts/$chart" --version "$VERSION" >/dev/null 2>&1; then
+              echo "::notice::$chart-$VERSION already published — bump Chart.yaml version to release."
+              continue
+            fi
+
+            NOTES=$(changelog_section "charts/$chart/CHANGELOG.md" "$VERSION" || true)
+            if [ -z "$NOTES" ]; then
+              echo "::error::charts/$chart/CHANGELOG.md has no '## [$VERSION]' section — add it in the version-bump commit."
+              exit 1
+            fi
+
+            helm dependency build "charts/$chart/"
+            helm package "charts/$chart/" --destination /tmp/charts
+            helm push "/tmp/charts/$chart-$VERSION.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+            git tag -a "$chart-$VERSION" -m "$chart $VERSION"
+            git push origin "$chart-$VERSION"
+            gh release create "$chart-$VERSION" --title "$chart $VERSION" --notes "$NOTES"
+          done

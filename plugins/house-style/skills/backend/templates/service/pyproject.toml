@@ -1,0 +1,56 @@
+[project]
+name = "{{dist}}"
+version = "0.1.0"
+description = "{{App}} API."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.18.5",
+    "asyncpg>=0.30.0",
+    "fastapi>=0.135.3",
+    "pydantic-settings>=2.11.0",
+    "sqlalchemy>=2.0.0",
+    "sqlmodel>=0.0.48",
+    "structlog>=26.1.0",
+    "uvicorn>=0.42.0",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "greenlet>=3.0.0",
+    "httpx2>=2.13.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = ["infra: requires local infrastructure (docker compose up -d)"]
+addopts = "-m 'not infra'"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "D"]
+ignore = ["B008", "D104", "D105", "D107", "UP046", "UP047"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{pkg}}"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"src/*/repositories/*" = ["D101", "D102"]
+"tests/**" = ["D"]

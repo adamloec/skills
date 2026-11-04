@@ -1,0 +1,24 @@
+{{- if .Values.api.networkPolicy.enabled }}
+# Only the web app's pods may reach the API: the browser never calls it directly. Enforced only
+# when the cluster's CNI implements NetworkPolicy; verify that before relying on it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{app}}-api
+  labels:
+    app: {{app}}-api
+    {{- include "{{app}}.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{app}}-api
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{app}}-web
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+{{- end }}

@@ -1,0 +1,109 @@
+name: Build and Deploy
+
+# Reusable: every app repo's CI calls this on a push to main. It builds and pushes the image at
+# an immutable sha tag, then writes that tag into this repo's chart values. The bump is NOT a
+# deploy: it makes a candidate that the next chart release carries. Callers pin @v1; after
+# editing this file, move the tag (git tag -fa v1 && git push -f origin v1).
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: GHCR image reference without a tag
+        required: true
+        type: string
+      value_keys:
+        description: Newline-delimited yq paths in the values file to set to the new tag
+        required: true
+        type: string
+      context:
+        description: Docker build context
+        default: "."
+        type: string
+      platforms:
+        description: Target build platforms
+        default: linux/amd64
+        type: string
+      infra_repo:
+        description: Repo holding the chart values
+        default: {{org}}/{{app}}-charts
+        type: string
+      values_file:
+        default: charts/{{app}}/values.yaml
+        type: string
+    secrets:
+      build_token:
+        description: Token for private deps inside the Docker build (mounted as the gh_token build secret)
+        required: true
+      infra_token:
+        description: Token with write access to infra_repo (pushes the values bump)
+        required: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: build-${{ github.repository }}-${{ github.ref }}-${{ inputs.image }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute immutable tag
+        id: tag
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          platforms: ${{ inputs.platforms }}
+          push: true
+          secrets: |
+            gh_token=${{ secrets.build_token }}
+          tags: |
+            ${{ inputs.image }}:${{ steps.tag.outputs.tag }}
+            ${{ inputs.image }}:latest
+
+      - name: Bump image tag in chart values
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          IMAGE: ${{ inputs.image }}
+          VALUES_FILE: ${{ inputs.values_file }}
+          VALUE_KEYS: ${{ inputs.value_keys }}
+          GH_TOKEN: ${{ secrets.infra_token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${{ inputs.infra_repo }}.git" infra
+          cd infra
+          while IFS= read -r key; do
+            [ -z "$key" ] && continue
+            yq -i "${key} = strenv(TAG)" "$VALUES_FILE"
+          done <<< "$VALUE_KEYS"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$VALUES_FILE"
+          if git diff --cached --quiet; then
+            echo "No tag change — nothing to bump."
+            exit 0
+          fi
+          git commit -m "deploy: ${IMAGE}:${TAG}"
+          for attempt in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push rejected (attempt $attempt) — rebasing"
+            git pull --rebase --autostash
+          done
+          echo "::error::failed to push values bump after retries"
+          exit 1

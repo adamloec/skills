@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{app}}-web
+  labels:
+    app: {{app}}-web
+    {{- include "{{app}}.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: {{app}}-web
+  template:
+    metadata:
+      labels:
+        app: {{app}}-web
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}
+      containers:
+        - name: {{app}}-web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.web.port }}
+          env:
+            - name: {{APP}}_VERSION
+              value: {{ .Chart.Version | quote }}
+            - name: API_URL
+              value: "http://{{app}}-api:{{ .Values.api.port }}"
+            - name: AUTH_URL
+              value: {{ include "{{app}}.publicOrigin" . | quote }}
+            # Optional: the session layer is provisioned after the first rollout; until then the
+            # pod starts with sign-in failing closed instead of crash-looping.
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecrets.secretName }}
+                  key: auth-secret
+                  optional: true
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
