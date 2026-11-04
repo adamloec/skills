@@ -1,0 +1,17 @@
+{
+  "name": "adamloec",
+  "owner": {
+    "name": "Adam Loeckle",
+    "url": "https://github.com/adamloec"
+  },
+  "description": "Personal Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "house-style",
+      "source": "./plugins/house-style",
+      "description": "Blueprints for building apps my way: backend Python, frontend TypeScript, and infra. Layout, file anatomy, naming, config, functions, classes, and templates to scaffold from.",
+      "category": "development",
+      "tags": ["style-guide", "scaffolding", "python", "fastapi", "typescript", "nextjs", "helm"]
+    }
+  ]
+}
