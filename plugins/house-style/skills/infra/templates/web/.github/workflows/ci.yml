@@ -1,0 +1,40 @@
+name: CI
+
+# Push to main as well as PRs: work often lands straight on main, and a PR-only trigger would
+# mean these checks never ran for it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm check:colors
+
+  deploy:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    # No build args: the image is identical in every environment.
+    uses: {{org}}/{{app}}-charts/.github/workflows/build-and-deploy.yml@v1
+    with:
+      image: ghcr.io/{{org}}/{{app}}-web
+      value_keys: |
+        .web.image.tag
+    secrets:
+      build_token: ${{ secrets.BUILD_TOKEN }}
+      infra_token: ${{ secrets.INFRA_TOKEN }}

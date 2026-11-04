@@ -1,0 +1,14 @@
+# Never ship the host's install or build output: a host node_modules built for another platform
+# (or holding a linked dependency's dangling symlink) breaks in the container.
+node_modules
+.next
+.git
+.gitignore
+.dockerignore
+Dockerfile
+npm-debug.log*
+*.tsbuildinfo
+.env*
+.vscode
+.idea
+.DS_Store

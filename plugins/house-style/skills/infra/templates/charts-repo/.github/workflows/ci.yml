@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Vendored subcharts match Chart.lock
+        run: helm dependency build charts/{{app}}/
+      - run: helm lint charts/{{app}}/
+      - name: Render the default install
+        run: helm template {{app}} charts/{{app}}/ > /dev/null
+      - name: Render a public install with TLS and dev secrets
+        run: |
+          helm template {{app}} charts/{{app}}/ \
+            --set appUrl=https://app.example.com --set ingress.host=app.example.com \
+            --set certManager.enabled=true \
+            --set appSecrets.create=true --set appSecrets.authSecret=x \
+            --set postgresAuth.create=true --set postgresAuth.password=x --set postgresAuth.postgresPassword=x \
+            > /dev/null
+      - name: A misconfigured render must fail
+        run: |
+          if helm template {{app}} charts/{{app}}/ --set appUrl=https://app.example.com/ > /dev/null 2>&1; then
+            echo "::error::a trailing-slash appUrl rendered; the publicOrigin guard is broken"
+            exit 1
+          fi
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git ls-files '*.sh' | xargs -r -n1 bash -n
+      - run: git ls-files '*.sh' | xargs -r shellcheck
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f local/docker-compose.yml config -q

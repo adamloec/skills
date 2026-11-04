@@ -1,0 +1,75 @@
+# ── Global ────────────────────────────────────────────────────────────────────
+
+# Public origin of the web app. Links in emails and redirects are built from it, and no request
+# to the API can reveal it.
+appUrl: "http://localhost"
+
+# Pulls first-party images from ghcr. Created by the installer script, never by this chart.
+imagePullSecret: ghcr-credentials
+
+ingress:
+  # Empty = no Ingress. Set to the app's public hostname.
+  host: ""
+
+certManager:
+  # Adds the cluster-issuer annotation and a tls block to the Ingress.
+  enabled: false
+  clusterIssuer: letsencrypt
+
+# ── API ───────────────────────────────────────────────────────────────────────
+
+api:
+  replicaCount: 1
+  image:
+    # Must match what the API repo's CI publishes. CI rewrites `tag` on every main push.
+    repository: ghcr.io/{{org}}/{{app}}-api
+    tag: sha-0000000
+  port: 8000
+  # Passed as `args`, so the image entrypoint still migrates first.
+  command: ["uv", "run", "uvicorn", "{{pkg}}.main:app", "--host", "0.0.0.0", "--port", "8000"]
+  env:
+    {{APP}}_DEBUG: "false"
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+  networkPolicy:
+    # The API is reached only by the web app's server side. Security-on by default.
+    enabled: true
+
+# ── Web ───────────────────────────────────────────────────────────────────────
+
+web:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/{{org}}/{{app}}-web
+    tag: sha-0000000
+  port: 3000
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+
+appSecrets:
+  # Holds `auth-secret` (the web session key). Provisioned out of band in production.
+  secretName: {{app}}-secrets
+  # Dev and scratch clusters only: render the Secret from the values below.
+  create: false
+  authSecret: ""
+
+postgresAuth:
+  # Dev and scratch clusters only: render {{app}}-postgres-auth from the values below.
+  create: false
+  password: ""
+  postgresPassword: ""
+
+# ── Postgres (bitnami subchart) ───────────────────────────────────────────────
+
+postgresql:
+  enabled: true
+  auth:
+    username: {{app}}
+    database: {{app}}_api
+    # Keys: `password` (the app user) and `postgres-password` (the superuser).
+    existingSecret: {{app}}-postgres-auth
+  primary:
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }

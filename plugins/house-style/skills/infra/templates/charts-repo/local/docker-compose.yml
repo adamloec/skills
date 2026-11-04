@@ -1,0 +1,66 @@
+# The local dev rig: the whole stack from the sibling repos' sources.
+# Clone {{app}}-api, {{app}}-web and {{app}}-charts side by side; paths below are relative to
+# this file. Values are deterministic dev defaults, overridable from local/.env.
+
+services:
+  # ── Data ──────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: {{app}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-{{app}}_dev}
+      POSTGRES_DB: {{app}}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{app}}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Backend ───────────────────────────────────────────────────────────────
+  {{app}}-api:
+    build:
+      context: ../../{{app}}-api
+      secrets: [gh_token]
+    environment:
+      {{APP}}_DEBUG: ${{{APP}}_DEBUG:-true}
+      {{APP}}_DATABASE_URL: postgresql+asyncpg://{{app}}:${POSTGRES_PASSWORD:-{{app}}_dev}@postgres:5432/{{app}}_api
+      {{APP}}_PUBLIC_URL: http://localhost:3000
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # python, not curl: the slim image has no curl.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+  {{app}}-web:
+    build:
+      context: ../../{{app}}-web
+      secrets: [gh_token]
+    environment:
+      API_URL: http://{{app}}-api:8000
+      AUTH_URL: http://localhost:3000
+      AUTH_SECRET: ${AUTH_SECRET:-dev-auth-secret-not-for-production}
+    ports:
+      - "3000:3000"
+    depends_on:
+      {{app}}-api:
+        condition: service_healthy
+
+secrets:
+  gh_token:
+    environment: GH_TOKEN
+
+volumes:
+  postgres_data: {}

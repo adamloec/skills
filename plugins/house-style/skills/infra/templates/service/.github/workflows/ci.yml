@@ -1,0 +1,37 @@
+name: CI
+
+# Push to main as well as PRs: work often lands straight on main, and a PR-only trigger would
+# mean these checks never ran for it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - name: Authorize private git dependencies
+        run: git config --global url."https://x-access-token:${{ secrets.BUILD_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: uv sync --frozen
+      - run: uv run ruff check
+      - run: uv run pytest -v
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    uses: {{org}}/{{app}}-charts/.github/workflows/build-and-deploy.yml@v1
+    with:
+      image: ghcr.io/{{org}}/{{app}}-api
+      # One key per chart component this image serves (an API and its worker share an image).
+      value_keys: |
+        .api.image.tag
+    secrets:
+      build_token: ${{ secrets.BUILD_TOKEN }}
+      infra_token: ${{ secrets.INFRA_TOKEN }}

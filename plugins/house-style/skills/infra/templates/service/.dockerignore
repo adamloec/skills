@@ -1,0 +1,15 @@
+# Never ship the host's virtualenv or caches: a .venv built for another platform breaks in the
+# container, and the image builds its own.
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+.git
+.gitignore
+.dockerignore
+Dockerfile
+tests
+.env*
+.vscode
+.idea
+.DS_Store
