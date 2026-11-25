@@ -41,8 +41,9 @@
   `DataTableEmpty`.
 - **`asChild`** (Radix Slot) projects styling onto a `Link`, so navigation stays a real anchor.
 - **ui never imports `next/*`.** Routing is injected: `linkComponent={Link}`.
-- **Renderless components** return `null` and say so ("Renders nothing."). Hydrators,
-  auto-refresh and providers that only subscribe are renderless.
+- **Renderless components** return `null` and say so ("Renders nothing."). Auto-refresh and
+  providers that only subscribe are renderless. Nothing renderless seeds a store: a store is
+  seeded by its provider (`state.md`).
 - **Hooks may own UI.** A hook can return `{ open, modal }`, where `modal: ReactNode`, so
   callers get the behaviour and its surface together.
 - **One funnel per cross-cutting transition.** Examples: one hook for every scope switch, one

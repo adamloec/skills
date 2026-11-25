@@ -13,7 +13,7 @@
 | Pure helpers | `lib/<topic>.ts` | `lib/status.ts`, `lib/format.ts` |
 | Wire types | `kit/types/<domain>.ts` | `kit/types/notes.ts` |
 | App-only types | `types/<domain>.ts`; `types/<pkg>-<thing>.d.ts` for ambient shims | `types/canvas-view.ts` |
-| Hydrator | `components/<store>-hydrator.tsx` | `projects-hydrator.tsx` |
+| Store composition | `components/<app>-stores.tsx`, one for the app | `app-stores.tsx` |
 | Scripts | `scripts/<verb>-<noun>.mjs` | `check-colors.mjs` |
 | `.ts` vs `.tsx` | `.tsx` only when the file contains JSX | — |
 
@@ -28,7 +28,7 @@
 | Context hook | `use<Ctx>()`, throws outside its provider | `useCanvas()` → `throw new Error("useCanvas must be used within CanvasProvider")` |
 | Callback props | `on<Event>` | `onRename`, `onSaved`, `onOpenChange` |
 | Local handlers | a plain verb (`save`, `toggle`, `remove`), or `handle<Event>` when it mirrors an `on<Event>` prop | — |
-| Booleans | **bare adjectives and participles**: `open`, `disabled`, `busy`, `pending`, `dirty`, `hydrated`, `readOnly`; capability prefixes `can`/`has`/`needs` | `canWrite`, `hasStoredSecrets` |
+| Booleans | **bare adjectives and participles**: `open`, `disabled`, `busy`, `pending`, `dirty`, `stale`, `readOnly`; capability prefixes `can`/`has`/`needs` | `canWrite`, `hasStoredSecrets` |
 | Constants | SCREAMING_SNAKE, **units in the name** | `PAGE_SIZE`, `POLL_MS = 60_000`, `MAX_AGE_SECONDS` |
 | Lookup maps | `const X_LABEL: Record<Union, string>`, `X_META: Record<Union, Style>` | `STATUS_LABEL`, `KIND_META` |
 | Class-string constants | SCREAMING_SNAKE | `ROW`, `COLS`, `TITLE` |

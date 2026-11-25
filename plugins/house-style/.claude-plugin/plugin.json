@@ -1,6 +1,6 @@
 {
   "name": "house-style",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Blueprints for building apps my way: backend Python, frontend TypeScript, and infra. Layout, file anatomy, naming, config, functions, classes, and templates to scaffold from.",
   "author": {
     "name": "Adam Loeckle",

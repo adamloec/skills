@@ -35,7 +35,7 @@ src/
 │   │   ├── layout.tsx
 │   │   └── login/page.tsx
 │   ├── (app)/                 route group: authenticated; the guard lives in its layout
-│   │   ├── layout.tsx         auth guard, hydrators, shell
+│   │   ├── layout.tsx         auth guard, store seeds, shell
 │   │   ├── loading.tsx        one loading boundary for the group
 │   │   ├── error.tsx          one error boundary: retry or go home, never a dead end
 │   │   ├── <feature>/page.tsx
@@ -46,7 +46,7 @@ src/
 │       └── streams/[<id>]/route.ts
 ├── components/                APP SHELL ONLY
 │   ├── app-providers.tsx      toaster, tooltip, confirm providers
-│   ├── <store>-hydrator.tsx   renderless RSC → store seeders
+│   ├── app-stores.tsx         every store provider, seeded by the layout
 │   └── layout/                app-shell.tsx, nav, switchers
 ├── features/
 │   └── <feature>/
@@ -86,7 +86,7 @@ src/
   one level: `features/<mode>/<feature>`, plus `features/global/<feature>` for code both modes
   use, and `features/<mode>/shared/` for code shared inside one mode. Routes follow the modes:
   `app/(app)/<mode>/<feature>/`.
-- **`components/`** holds the shell only: providers, hydrators, bridges, gates and `layout/*`.
+- **`components/`** holds the shell only: providers, the store composition, bridges, gates and `layout/*`.
   Never put a feature's UI there.
 - **`lib/`** holds server and app infrastructure. Pure, framework-free logic goes to `kit/`.
   Drawing goes to `ui/`.
@@ -124,5 +124,5 @@ For a feature `invoices`:
    pieces.
 5. `app/(app)/invoices/page.tsx`: `dynamic = "force-dynamic"`, `metadata`, fetch, render
    `<InvoiceList initialInvoices={…} />`.
-6. Add the route to the nav config. If other surfaces read the data, add a store and a
-   hydrator (`state.md`).
+6. Add the route to the nav config. If other surfaces read the data, add a seeded store and
+   its provider (`state.md`).
