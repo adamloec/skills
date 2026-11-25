@@ -56,7 +56,7 @@ them: see `references/packages.md`.
 | naming files, components, props, hooks, stores, actions, constants | `references/naming.md` |
 | components, composition, Tailwind, tokens, loading/empty/error states | `references/components.md` |
 | RSC reads, server actions, API client, route handlers, auth seam | `references/data.md` |
-| Zustand, hydrators, URL state, cookies, context | `references/state.md` |
+| Zustand, seeded stores, first paint, URL state, cookies, context | `references/state.md` |
 | wire types, unions, `interface` vs `type` | `references/types.md` |
 | env vars, next.config, tsconfig, eslint, pnpm, scripts | `references/config.md` |
 | shared `ui` / `kit` / server-session packages, extraction | `references/packages.md` |
@@ -93,9 +93,11 @@ them: see `references/packages.md`.
    `result.success`.
 9. **Never trust caller-supplied scope.** Actions read the token and the active scope from
    httpOnly cookies on the server.
-10. **Stores are mirrors, not sources.** Zustand holds client views of server truth. They are
-   seeded by renderless `*Hydrator` components from RSC props and refreshed by
-   `router.refresh()`. Never use `persist`.
+10. **Stores are mirrors, not sources, and are never empty.** Zustand holds client views of
+   server truth. Each is created per request inside a provider, with the RSC's values already
+   in it, and takes newer ones on `router.refresh()`. Never fill a store from an effect, never
+   restore a preference after mount, never use `persist`. What the first paint draws comes
+   from the server: seeds and cookies.
 11. **Semantic tokens only:** `bg-card`, `text-muted-foreground`, `border-border`. No hex, no
     `dark:`, no fixed neutrals, no duration literals. `pnpm check:colors` enforces it.
 12. **No parallel component library.** Primitives live in `ui` (`src/ui/` until it becomes a
@@ -121,7 +123,7 @@ them: see `references/packages.md`.
     ├── auth.ts            the one auth seam: getAccessToken()
     ├── proxy.ts           request gate (session-cookie presence) + per-request CSP
     ├── app/               routing only: (auth)/, (app)/, api/ route handlers
-    ├── components/        app shell glue: providers, hydrators, layout/
+    ├── components/        app shell glue: providers, the store composition, layout/
     ├── features/<feature>/  actions.ts, components/, hooks/, lib/
     ├── lib/               server infrastructure: env.ts, action-result.ts, api/client.ts, api/<domain>.ts
     ├── stores/            cross-surface Zustand mirrors

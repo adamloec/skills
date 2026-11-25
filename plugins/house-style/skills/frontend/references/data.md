@@ -162,7 +162,7 @@ export async function createNote(displayName: string): Promise<ActionResult<Note
 - Each action has its own fallback message: "Failed to rename note".
 - **Never accept scope or identity as an argument.** Read them on the server.
 - Call `revalidatePath("<route>")` after a successful write. If the write changes data that a
-  layout hydrates into a store, the client follows with `router.refresh()`.
+  layout seeds into a store, the client follows with `router.refresh()`.
 - **At the call site, check `result.success` every time:**
   ```tsx
   const [pending, startTransition] = useTransition();

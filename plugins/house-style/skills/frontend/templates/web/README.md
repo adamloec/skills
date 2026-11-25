@@ -10,7 +10,7 @@ src/
   auth.ts        the one auth seam (getAccessToken)
   proxy.ts       session-cookie gate + per-request CSP
   app/           routing only: (auth)/, (app)/, api/
-  components/    app shell glue: providers, hydrators, layout/
+  components/    app shell glue: providers, the store composition, layout/
   features/      one folder per feature: actions.ts, components/, hooks/, lib/
   lib/           server infrastructure: api/client.ts, api/<domain>.ts
   stores/        cross-surface Zustand mirrors
